@@ -1,75 +1,98 @@
 import { Component } from 'react';
-import { FeedbackOptions } from './FeedbackOptions'
-import { Statistics } from './Statistics';
-import { Notification } from './Notification';
-
+import { nanoid } from 'nanoid';
+import { Form } from './Form'
+import { Filter } from './Filter';
+import { ContactsList } from "./ContactsList";
 
 export class App extends Component {
   state = {
-    good: 0,
-    neutral: 0,
-    bad: 0,
-  };
+    contacts: [
+      {id: 'id-1', name: 'Rosie Simpson', number: '459-12-56'},
+      {id: 'id-2', name: 'Hermione Kline', number: '443-89-12'},
+      {id: 'id-3', name: 'Eden Clements', number: '645-17-79'},
+      {id: 'id-4', name: 'Annie Copeland', number: '227-91-26'},
+    ],
+    filter: '',
+    name: '',
+    number: ''
+  }    
 
-  countTotalFeedback = () => {
-    const { good, neutral, bad } = this.state;
-    return good + neutral + bad;
-  };
+  addContact = ({name, number}) => {
+    const contact = {
+      id: nanoid(),
+      name,
+      number,
+    }
 
-  countPositiveFeedback = () => {
-    const { good } = this.state;
-    return Math.floor((good / this.countTotalFeedback()) * 100);
-  };
+    if(this.state.contacts.find( contact => contact.name === name)) {
+      return alert(`${name} is already in contacts`)
+    }
 
-  onLeaveFeedback = name => {
-    this.setState(state => ({
-      [name]: state[name] + 1,
-    }));
-  };
+    this.setState(({contacts}) => ({
+      contacts: [contact, ...contacts]
+    }))
+  }
+
+  changeFilter = e => {
+    this.setState({filter: e.currentTarget.value});
+  }
+
+  deleteContact = contactId => {
+    this.setState(prevState => ({
+      contacts: prevState.contacts.filter(contact => contact.id !== contactId)
+    }))
+
+  }
 
   render() {
-    const { good, neutral, bad } = this.state;
-    const total = good + neutral + bad;
-    const positiveFeedback = this.countPositiveFeedback();
-    
-    return(
-      <div
-      style={{
-        width: "320px",
-        margin: "7px",
-        marginRight: "auto",
-        marginLeft: "auto",
-        textAlign: "center",
-        paddingTop: "6px",
-        paddingBottom: "6px",
-        cursor: "pointer",
-        border: "none",
-        borderRadius: "4px",
-        boxShadow: "0px 0px 5px 2px rgba(174,183,227,1)",
-    }}>     
-        <h2
-        style={{color: "rgba(174,183,227,1)",
-      }}>Please leave feedback</h2>
+    const {filter, contacts} = this.state;
 
-        <FeedbackOptions 
-            options={Object.keys(this.state)}
-            onLeaveFeedback={this.onLeaveFeedback}
+    const filteredContacts = contacts.filter(contact =>
+      contact.name.toLowerCase().includes(filter.toLowerCase()),
+    )
+
+    return (
+      <>
+        <div
+ style={{
+      width: "320px",
+      margin: "7px",
+      marginRight: "auto",
+      marginLeft: "auto",
+      textAlign: "center",
+      paddingTop: "6px",
+      paddingBottom: "6px",
+      borderRadius: "4px",
+      boxShadow: "0px 0px 5px 2px rgba(174,183,227,1)",
+  }}>
+          
+          <h2
+          style={{
+            marginBottom: "18px",
+            color: "rgba(174,183,227,1)"
+          }}>Phonebook</h2>
+          
+          <Form onSubmit={this.addContact}/>
+          
+          <h3
+          style={{
+            marginBottom: "16px",
+            color: "rgba(174,183,227,1)"
+          }}
+          >Contacts</h3>
+
+          <Filter 
+            value={filter}
+            onChange={this.changeFilter}
           />
 
-        <h2
-        style={{color: "rgba(174,183,227,1)",
-      }}>Statistics</h2>
+          <ContactsList 
+            contacts={filteredContacts}
+            onDeleteContact={this.deleteContact}
+          />
 
-            {!total 
-            ? (<Notification message={`There is no feedback`} />)
-            : (<>
-                <Statistics text={`Good:`} value={good} />
-                <Statistics text={`Neutral:`} value={neutral} />
-                <Statistics text={`Bad:`} value={bad} />
-                <Statistics text={`Total:`} value={total} />
-                <Statistics text={`Positive feedback, % :`} value={positiveFeedback}/>
-              </>)}
-      </div>
+        </div>
+      </>
     )
   }
-}  
+};
